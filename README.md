@@ -2,4 +2,6 @@ Java code to train document embeddings using cosine similarity, simply run the p
 
 Run ensemble.py in order to test the combination of document embeddings with NB-weighted bag of ngrams.
 
-I'll post the trained embeddings as well as the imdb preprocessed data after the anonymity period
+We highly encourage everyone to try and reproduce the experiments, and all thoughts and criticisms are greatly appreciented, thanks! :)
+
+We'll post the trained embeddings as well as the imdb preprocessed data after the anonymity period
