@@ -4,4 +4,4 @@ Run ensemble.py in order to test the combination of document embeddings with NB-
 
 We highly encourage everyone to try and reproduce the experiments, and all thoughts and criticisms are greatly appreciated, thanks! :)
 
-We'll post the trained embeddings as well as the imdb preprocessed data after the anonymity period
+We'll post the trained embeddings as well as the imdb preprocessed data after the anonymity period, don't know a good way of hosting those files anonymously right now.
