@@ -39,7 +39,7 @@ public class Classifier {
         model = Linear.train(problem, parameter);
     }
     
-    public void score(double[][] WP, List<Document> testDocs) {
+    public double score(double[][] WP, List<Document> testDocs) {
         int numInstances = testDocs.size();
         int numFeatures = WP[0].length;
         
@@ -57,8 +57,9 @@ public class Classifier {
             }
         }
         
-        System.out.println("Accuracy = "+ ((corrects+0.0)/numInstances)*100 +"% ("+ corrects+"/"+numInstances+")");
-        
+        double accuracy = ((corrects+0.0)/numInstances)*100;
+        System.out.println("Accuracy = "+ accuracy +"% ("+ corrects+"/"+numInstances+")");
+        return accuracy;
     }
     
 }

@@ -19,9 +19,9 @@ public class NeuralNetwork {
 
     /* Parameters here */
     private static final int gram = 3;
-    private static final double lr = 0.001;
+    private static double lr = 0.001;
     private static final int negSize = 5;
-    private static final int iter = 120;
+    private static int iter = 120;
     private static final int batchSize = 100;
     private static final int n = 500;
     private static final int a = 6;
@@ -29,7 +29,7 @@ public class NeuralNetwork {
     private static final int numThreads = 22;
     private static final boolean saveVecs = true;
 
-    private static final String datasetName = "imdb"; //"imdb" for imdb dataset | "sst" for stanford sentiment treebank
+    private static final boolean tuning = false;
     /* */
 
     private static double[][] WV;
@@ -40,16 +40,8 @@ public class NeuralNetwork {
     public static void main(String[] args) {
         System.out.println("Reading Documents");
         List<Document> allDocs = null;
-        switch (datasetName) {
-            case "imdb":
-                allDocs = Dataset.getImdbDataset(gram);
-                break;
-            case "sst":
-                allDocs = Dataset.getSstDataset(gram);
-                break;
-        }
+        allDocs = Dataset.getImdbDataset(gram);
 
-        List<Document> docList = new ArrayList<Document>(allDocs);
         List<Document> trainDocs = new ArrayList<Document>();
         List<Document> testDocs = new ArrayList<Document>();
         for (Document doc : allDocs) {
@@ -60,6 +52,57 @@ public class NeuralNetwork {
             }
         }
 
+        if (!tuning) {
+            learnEmbeddingsAndTest(trainDocs, testDocs, allDocs);
+        } else if (tuning) {
+            Collections.shuffle(trainDocs);
+            List<Document> devDocs = new ArrayList<Document>(trainDocs.subList(0, trainDocs.size()/5));
+            List<Document> devTrainDocs = new ArrayList<Document>(trainDocs.subList(trainDocs.size()/5,trainDocs.size()));
+            double bestAccuracy = 0;
+            int[] iters = {20, 40, 80, 120};
+            double[] lrs = {0.25, 0.025, 0.0025, 0.001};
+            for (int iterTemp : iters) {
+                for (double lrTemp : lrs) {
+                    iter = iterTemp;
+                    lr = lrTemp;
+                    double accuracy = learnEmbeddingsAndTest(devTrainDocs, devDocs, allDocs);
+                    writeToFileForTuning(false, accuracy);
+                    if (accuracy > bestAccuracy) {
+                        bestAccuracy = accuracy;
+                    }
+                }
+            }
+            writeToFileForTuning(true, bestAccuracy);
+        }
+    }
+
+    private static void writeToFileForTuning(boolean best, double accuracy) {
+        try {
+            FileWriter fw;
+            if (best) {
+                fw = new FileWriter(gram + lr + negSize + iter + batchSize + n + a + "best.txt");
+            }
+            fw = new FileWriter(gram + lr + negSize + iter + batchSize + n + a + ".txt");
+            fw.write("gram = " + gram + "\n");
+            fw.write("lr = " + lr + "\n");
+            fw.write("negSize = " + negSize + "\n");
+            fw.write("iter = " + iter + "\n");
+            fw.write("batchSize = " + batchSize + "\n");
+            fw.write("n = " + n + "\n");
+            fw.write("a = " + a + "\n");
+            fw.write("accuracy=" + accuracy + "\n");
+            if (best) {
+                fw.write("best accuracy\n");
+            }
+            fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static double learnEmbeddingsAndTest(List<Document> trainDocs, List<Document> testDocs, List<Document> allDocs) {
+        double accuracy = 0;
+        List<Document> docList = new ArrayList<Document>(allDocs);
         Dataset.initSum();
         System.out.println("Initializing network");
         initNet(allDocs);
@@ -93,16 +136,10 @@ public class NeuralNetwork {
             int endEpoch = (int) System.currentTimeMillis();
             System.out.printf("time: %d seconds\n", (endEpoch - startEpoch) / 1000);
 
-            if (datasetName.equals("imdb") || datasetName.equals("sst")) {
-                Classifier binaryClassifier = new Classifier(SolverType.L2R_LR, 1.0, 0.01, false);
-                binaryClassifier.train(WP, trainDocs);
-                binaryClassifier.score(WP, testDocs);
-            }
-            if (datasetName.equals("sst")) {
-                Classifier multiClassClassifer = new Classifier(SolverType.L2R_LR, 1.0, 0.01, true);
-                multiClassClassifer.train(WP, trainDocs);
-                multiClassClassifer.score(WP, testDocs);
-            }
+            Classifier binaryClassifier = new Classifier(SolverType.L2R_LR, 1.0, 0.01);
+            binaryClassifier.train(WP, trainDocs);
+            accuracy = binaryClassifier.score(WP, testDocs);
+
         }
 
         if (saveVecs) {
@@ -118,7 +155,7 @@ public class NeuralNetwork {
                     if (doc.split.equals("test")) {
                         fw = fw_test;
                     }
-                    fw.write(doc.binaryClassLabel + "\t");
+                    fw.write(doc.sentiment + "\t");
                     for (int i = 0; i < n; i++) {
                         fw.write(WP[doc.tag][i] + "\t");
                     }
@@ -131,6 +168,8 @@ public class NeuralNetwork {
                 e.printStackTrace();
             }
         }
+
+        return accuracy;
     }
 
     public static void initNet(List<Document> allDocs) {
