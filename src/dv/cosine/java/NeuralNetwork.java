@@ -41,7 +41,8 @@ public class NeuralNetwork {
         System.out.println("Reading Documents");
         List<Document> allDocs = null;
         allDocs = Dataset.getImdbDataset(gram);
-
+        
+        List<Document> docList = new ArrayList<Document>(allDocs);
         List<Document> trainDocs = new ArrayList<Document>();
         List<Document> testDocs = new ArrayList<Document>();
         for (Document doc : allDocs) {
@@ -53,11 +54,11 @@ public class NeuralNetwork {
         }
 
         if (!tuning) {
-            learnEmbeddingsAndTest(trainDocs, testDocs, allDocs);
+            learnEmbeddingsAndTest(trainDocs, testDocs, allDocs,docList);
         } else if (tuning) {
             Collections.shuffle(trainDocs);
-            List<Document> devDocs = new ArrayList<Document>(trainDocs.subList(0, trainDocs.size()/5));
-            List<Document> devTrainDocs = new ArrayList<Document>(trainDocs.subList(trainDocs.size()/5,trainDocs.size()));
+            List<Document> devDocs = trainDocs.subList(0, trainDocs.size()/5);
+            List<Document> devTrainDocs = trainDocs.subList(trainDocs.size()/5,trainDocs.size());
             double bestAccuracy = 0;
             int[] iters = {20, 40, 80, 120};
             double[] lrs = {0.25, 0.025, 0.0025, 0.001};
@@ -65,7 +66,7 @@ public class NeuralNetwork {
                 for (double lrTemp : lrs) {
                     iter = iterTemp;
                     lr = lrTemp;
-                    double accuracy = learnEmbeddingsAndTest(devTrainDocs, devDocs, allDocs);
+                    double accuracy = learnEmbeddingsAndTest(devTrainDocs, devDocs, allDocs,docList);
                     writeToFileForTuning(false, accuracy);
                     if (accuracy > bestAccuracy) {
                         bestAccuracy = accuracy;
@@ -100,9 +101,8 @@ public class NeuralNetwork {
         }
     }
 
-    private static double learnEmbeddingsAndTest(List<Document> trainDocs, List<Document> testDocs, List<Document> allDocs) {
+    private static double learnEmbeddingsAndTest(List<Document> trainDocs, List<Document> testDocs, List<Document> allDocs, List<Document> docList) {
         double accuracy = 0;
-        List<Document> docList = new ArrayList<Document>(allDocs);
         Dataset.initSum();
         System.out.println("Initializing network");
         initNet(allDocs);
