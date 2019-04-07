@@ -67,6 +67,7 @@ public class NeuralNetwork {
                     iter = iterTemp;
                     lr = lrTemp;
                     double accuracy = learnEmbeddingsAndTest(devTrainDocs, devDocs, allDocs,docList);
+                    System.gc();
                     writeToFileForTuning(false, accuracy);
                     if (accuracy > bestAccuracy) {
                         bestAccuracy = accuracy;
@@ -168,7 +169,8 @@ public class NeuralNetwork {
                 e.printStackTrace();
             }
         }
-
+        WV = null;
+        WP = null;
         return accuracy;
     }
 
