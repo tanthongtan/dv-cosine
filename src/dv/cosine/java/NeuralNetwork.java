@@ -24,7 +24,8 @@ public class NeuralNetwork {
     private static int iter = 120;
     private static final int batchSize = 100;
     private static final int n = 500;
-    private static final int a = 6;
+    private static int a = 6;
+    private static boolean lrAnnealing = false;
 
     private static final int numThreads = 22;
     private static final boolean saveVecs = true;
@@ -41,7 +42,7 @@ public class NeuralNetwork {
         System.out.println("Reading Documents");
         List<Document> allDocs = null;
         allDocs = Dataset.getImdbDataset(gram);
-        
+
         List<Document> docList = new ArrayList<Document>(allDocs);
         List<Document> trainDocs = new ArrayList<Document>();
         List<Document> testDocs = new ArrayList<Document>();
@@ -54,23 +55,31 @@ public class NeuralNetwork {
         }
 
         if (!tuning) {
-            learnEmbeddingsAndTest(trainDocs, testDocs, allDocs,docList);
+            learnEmbeddingsAndTest(trainDocs, testDocs, allDocs, docList);
         } else if (tuning) {
             Collections.shuffle(trainDocs);
-            List<Document> devDocs = trainDocs.subList(0, trainDocs.size()/5);
-            List<Document> devTrainDocs = trainDocs.subList(trainDocs.size()/5,trainDocs.size());
+            List<Document> devDocs = trainDocs.subList(0, trainDocs.size() / 5);
+            List<Document> devTrainDocs = trainDocs.subList(trainDocs.size() / 5, trainDocs.size());
             double bestAccuracy = 0;
             int[] iters = {20, 40, 80, 120};
             double[] lrs = {0.25, 0.025, 0.0025, 0.001};
-            for (int iterTemp : iters) {
-                for (double lrTemp : lrs) {
-                    iter = iterTemp;
-                    lr = lrTemp;
-                    double accuracy = learnEmbeddingsAndTest(devTrainDocs, devDocs, allDocs,docList);
-                    System.gc();
-                    writeToFileForTuning(false, accuracy);
-                    if (accuracy > bestAccuracy) {
-                        bestAccuracy = accuracy;
+            int[] as = {4, 6, 8};
+            boolean[] lrAnnealings = {true, false};
+            for (boolean lrAnnealingTemp : lrAnnealings) {
+                for (int aTemp : as) {
+                    for (int iterTemp : iters) {
+                        for (double lrTemp : lrs) {
+                            iter = iterTemp;
+                            lr = lrTemp;
+                            lrAnnealing = lrAnnealingTemp;
+                            a = aTemp;
+                            double accuracy = learnEmbeddingsAndTest(devTrainDocs, devDocs, allDocs, docList);
+                            System.gc();
+                            writeToFileForTuning(false, accuracy);
+                            if (accuracy > bestAccuracy) {
+                                bestAccuracy = accuracy;
+                            }
+                        }
                     }
                 }
             }
@@ -83,8 +92,9 @@ public class NeuralNetwork {
             FileWriter fw;
             if (best) {
                 fw = new FileWriter(gram + lr + negSize + iter + batchSize + n + a + "best.txt");
+            } else {
+                fw = new FileWriter(gram + lr + negSize + iter + batchSize + n + a + ".txt");
             }
-            fw = new FileWriter(gram + lr + negSize + iter + batchSize + n + a + ".txt");
             fw.write("gram = " + gram + "\n");
             fw.write("lr = " + lr + "\n");
             fw.write("negSize = " + negSize + "\n");
@@ -103,7 +113,7 @@ public class NeuralNetwork {
     }
 
     private static double learnEmbeddingsAndTest(List<Document> trainDocs, List<Document> testDocs, List<Document> allDocs, List<Document> docList) {
-        double accuracy = 0;
+        double accuracy = 0, originalLr = lr;
         Dataset.initSum();
         System.out.println("Initializing network");
         initNet(allDocs);
@@ -111,6 +121,10 @@ public class NeuralNetwork {
         for (int epoch = 0; epoch < iter; epoch++) {
             int startEpoch = (int) System.currentTimeMillis();
             System.out.printf("%d::\n", epoch);
+            if (lrAnnealing) {
+                lr = originalLr * (1 - (epoch * 1.0f / iter));
+                System.out.printf("lr = %d\n", lr);
+            }
             int p = 0;
             Collections.shuffle(docList);
             ExecutorService pool = Executors.newFixedThreadPool(numThreads);
