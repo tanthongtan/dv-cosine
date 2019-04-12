@@ -123,7 +123,7 @@ public class NeuralNetwork {
             System.out.printf("%d::\n", epoch);
             if (lrAnnealing) {
                 lr = originalLr * (1 - (epoch * 1.0f / iter));
-                System.out.printf("lr = %d\n", lr);
+                System.out.printf("lr = %f\n", lr);
             }
             int p = 0;
             Collections.shuffle(docList);
