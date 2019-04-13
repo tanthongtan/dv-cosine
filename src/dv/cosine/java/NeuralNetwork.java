@@ -102,6 +102,7 @@ public class NeuralNetwork {
             fw.write("batchSize = " + batchSize + "\n");
             fw.write("n = " + n + "\n");
             fw.write("a = " + a + "\n");
+            fw.write("lrAnnealing = " + lrAnnealing + "\n");
             fw.write("accuracy=" + accuracy + "\n");
             if (best) {
                 fw.write("best accuracy\n");
