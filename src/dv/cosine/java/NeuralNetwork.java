@@ -9,8 +9,10 @@ import static java.lang.Math.sqrt;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -22,10 +24,11 @@ public class NeuralNetwork {
     private static double lr = 0.001;
     private static final int negSize = 5;
     private static int iter = 120;
-    private static final int batchSize = 100;
+    private static final int batchSize = 100; //we use SGD not minibatchGD, but batchSize just determines how many documents are assigned to each thread
     private static final int n = 500;
-    private static int a = 6;
+    private static int a = 6; //only for cosine
     private static boolean lrAnnealing = false;
+    private static final String mode = "cosinesimilarity"; //"cosinesimilarity" to use cosine similarity, "dotproduct" to use dot product, and "l2rdotproduct" to use L2 regularized dot product
 
     private static final int numThreads = 22;
     private static final boolean saveVecs = true;
@@ -103,6 +106,7 @@ public class NeuralNetwork {
             fw.write("n = " + n + "\n");
             fw.write("a = " + a + "\n");
             fw.write("lrAnnealing = " + lrAnnealing + "\n");
+            fw.write("mode = " + mode + "\n");
             fw.write("accuracy=" + accuracy + "\n");
             if (best) {
                 fw.write("best accuracy\n");
@@ -233,13 +237,43 @@ public class NeuralNetwork {
                 int[] ids = doc.wordIds;
                 int[] forIds = getRandomPermutation(ids.length);
                 for (int l : forIds) {
+                    //one iteration of SGD:
+                    Set<Integer> updatedWordsIds = new HashSet<Integer>(); //only used in L2R dot product
+                    updatedWordsIds.add(ids[l]);//only used in L2R dot product
                     Arrays.fill(temp, 0);
                     backprop(WP[pi], WV[ids[l]], 1, temp);
                     for (int i = 0; i < negSize; i++) {
-                        backprop(WP[pi], WV[Dataset.getRandomWordId()], 0, temp);
+                        int randomWordId = Dataset.getRandomWordId();
+                        backprop(WP[pi], WV[randomWordId], 0, temp);
+                        updatedWordsIds.add(randomWordId);//only used in L2R dot product
                     }
-                    for (int i = 0; i < n; i++) {
-                        WP[pi][i] += temp[i];
+                    if (mode.equals("cosinesimilarity") || mode.equals("dotproduct")) {
+                        for (int i = 0; i < n; i++) {
+                            WP[pi][i] += temp[i];
+                        }
+                    }
+                    else if (mode.equals("l2rdotproduct")){
+                        for (int i = 0; i < n; i++) {
+                            WP[pi][i] += temp[i] - lr * 1.0d / WP.length * WP[pi][i];
+                        }
+                        for (int i = 0; i < WP.length; i++){
+                            if (WP[i]!= null){
+                                if (i!=pi){
+                                    for (int j = 0; j<n; j++){
+                                        WP[i][j] += - lr * 1.0d / WP.length * WP[i][j];
+                                    }
+                                }
+                            }
+                        }
+                        for (int i = 0; i < WV.length; i++){
+                            if (WV[i]!=null){
+                                if (!updatedWordsIds.contains(i)){
+                                    for (int j = 0; j < n; j++){
+                                        WV[i][j] += - lr * 1.0d / WP.length * WV[i][j];
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -249,21 +283,37 @@ public class NeuralNetwork {
             if (h == null || v == null) {
                 return;
             }
-            double h_dot_v = 0;
-            double mag_v = 0;
-            double mag_h = 0;
-            for (int i = 0; i < n; i++) {
-                h_dot_v += h[i] * v[i];
-                mag_v += v[i] * v[i];
-                mag_h += h[i] * h[i];
-            }
-            mag_v = sqrt(mag_v);
-            mag_h = sqrt(mag_h);
-            double cos_theta = h_dot_v / (mag_v * mag_h);
-            double y = 1.0 / (1 + exp(-a * cos_theta));
-            for (int i = 0; i < n; i++) {
-                temp[i] += -(y - t) * a * (v[i] / (mag_v * mag_h) - h[i] * (h_dot_v) / (pow(mag_h, 3) * mag_v)) * lr;
-                v[i] += -(y - t) * a * (h[i] / (mag_v * mag_h) - v[i] * (h_dot_v) / (pow(mag_v, 3) * mag_h)) * lr;
+            if (mode.equals("cosinesimilarity")) {
+                double h_dot_v = 0;
+                double mag_v = 0;
+                double mag_h = 0;
+                for (int i = 0; i < n; i++) {
+                    h_dot_v += h[i] * v[i];
+                    mag_v += v[i] * v[i];
+                    mag_h += h[i] * h[i];
+                }
+                mag_v = sqrt(mag_v);
+                mag_h = sqrt(mag_h);
+                double cos_theta = h_dot_v / (mag_v * mag_h);
+                double y = 1.0 / (1 + exp(-a * cos_theta));
+                for (int i = 0; i < n; i++) {
+                    temp[i] += -(y - t) * a * (v[i] / (mag_v * mag_h) - h[i] * (h_dot_v) / (pow(mag_h, 3) * mag_v)) * lr;
+                    v[i] += -(y - t) * a * (h[i] / (mag_v * mag_h) - v[i] * (h_dot_v) / (pow(mag_v, 3) * mag_h)) * lr;
+                }
+            } else if (mode.equals("dotproduct") || mode.equals("l2rdotproduct")) {
+                double h_dot_v = 0;
+                for (int i = 0; i < n; i++) {
+                    h_dot_v += h[i] * v[i];
+                }
+                double y = 1.0 / (1 + exp(-h_dot_v));
+                for (int i = 0; i < n; i++) {
+                    temp[i] += -(y - t) * v[i] * lr;
+                    if (mode.equals("dotproduct")) {
+                        v[i] += -(y - t) * h[i] * lr;
+                    } else if (mode.equals("l2rdotproduct")) {
+                        v[i] += -(y - t) * h[i] * lr - lr * 1.0d / WP.length * v[i];
+                    }
+                }
             }
         }
 
