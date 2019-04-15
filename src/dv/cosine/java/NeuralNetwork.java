@@ -64,6 +64,7 @@ public class NeuralNetwork {
             List<Document> devDocs = trainDocs.subList(0, trainDocs.size() / 5);
             List<Document> devTrainDocs = trainDocs.subList(trainDocs.size() / 5, trainDocs.size());
             double bestAccuracy = 0;
+            String[] bestParams = null;
             int[] iters = {20, 40, 80, 120};
             double[] lrs = {0.25, 0.025, 0.0025, 0.001};
             int[] as = {4, 6, 8};
@@ -78,26 +79,23 @@ public class NeuralNetwork {
                             a = aTemp;
                             double accuracy = learnEmbeddingsAndTest(devTrainDocs, devDocs, allDocs, docList);
                             System.gc();
-                            writeToFileForTuning(false, accuracy);
+                            writeToFileForTuning(accuracy);
                             if (accuracy > bestAccuracy) {
                                 bestAccuracy = accuracy;
+                                bestParams = new String[]{gram + "", lr + "", negSize + "", iter + "", batchSize + "", n + "", a + "", lrAnnealing + "", mode};
                             }
                         }
                     }
                 }
             }
-            writeToFileForTuning(true, bestAccuracy);
+            writeToFileForTuning(bestAccuracy, bestParams);
         }
     }
 
-    private static void writeToFileForTuning(boolean best, double accuracy) {
+    private static void writeToFileForTuning(double accuracy) {
         try {
-            FileWriter fw;
-            if (best) {
-                fw = new FileWriter(gram + lr + negSize + iter + batchSize + n + a + "best.txt");
-            } else {
-                fw = new FileWriter(gram + lr + negSize + iter + batchSize + n + a + ".txt");
-            }
+            FileWriter fw = new FileWriter("" + gram + lr + negSize + iter + batchSize + n + a + lrAnnealing + mode + ".txt");
+
             fw.write("gram = " + gram + "\n");
             fw.write("lr = " + lr + "\n");
             fw.write("negSize = " + negSize + "\n");
@@ -108,9 +106,30 @@ public class NeuralNetwork {
             fw.write("lrAnnealing = " + lrAnnealing + "\n");
             fw.write("mode = " + mode + "\n");
             fw.write("accuracy=" + accuracy + "\n");
-            if (best) {
-                fw.write("best accuracy\n");
-            }
+
+            fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void writeToFileForTuning(double accuracy, String[] bestParams) {
+        try {
+            FileWriter fw = new FileWriter("" + bestParams[0] + bestParams[1] + bestParams[2] + bestParams[3] + bestParams[4] + bestParams[5] + bestParams[6] + bestParams[7] + bestParams[8] + "best.txt");
+
+            fw.write("gram = " + bestParams[0] + "\n");
+            fw.write("lr = " + bestParams[1] + "\n");
+            fw.write("negSize = " + bestParams[2] + "\n");
+            fw.write("iter = " + bestParams[3] + "\n");
+            fw.write("batchSize = " + bestParams[4] + "\n");
+            fw.write("n = " + bestParams[5] + "\n");
+            fw.write("a = " + bestParams[6] + "\n");
+            fw.write("lrAnnealing = " + bestParams[7] + "\n");
+            fw.write("mode = " + bestParams[8] + "\n");
+            fw.write("accuracy=" + accuracy + "\n");
+
+            fw.write("best accuracy\n");
+
             fw.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -251,25 +270,24 @@ public class NeuralNetwork {
                         for (int i = 0; i < n; i++) {
                             WP[pi][i] += temp[i];
                         }
-                    }
-                    else if (mode.equals("l2rdotproduct")){
+                    } else if (mode.equals("l2rdotproduct")) {
                         for (int i = 0; i < n; i++) {
                             WP[pi][i] += temp[i] - lr * 1.0d / WP.length * WP[pi][i];
                         }
-                        for (int i = 0; i < WP.length; i++){
-                            if (WP[i]!= null){
-                                if (i!=pi){
-                                    for (int j = 0; j<n; j++){
-                                        WP[i][j] += - lr * 1.0d / WP.length * WP[i][j];
+                        for (int i = 0; i < WP.length; i++) {
+                            if (WP[i] != null) {
+                                if (i != pi) {
+                                    for (int j = 0; j < n; j++) {
+                                        WP[i][j] += -lr * 1.0d / WP.length * WP[i][j];
                                     }
                                 }
                             }
                         }
-                        for (int i = 0; i < WV.length; i++){
-                            if (WV[i]!=null){
-                                if (!updatedWordsIds.contains(i)){
-                                    for (int j = 0; j < n; j++){
-                                        WV[i][j] += - lr * 1.0d / WP.length * WV[i][j];
+                        for (int i = 0; i < WV.length; i++) {
+                            if (WV[i] != null) {
+                                if (!updatedWordsIds.contains(i)) {
+                                    for (int j = 0; j < n; j++) {
+                                        WV[i][j] += -lr * 1.0d / WP.length * WV[i][j];
                                     }
                                 }
                             }
