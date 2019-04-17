@@ -257,14 +257,10 @@ public class NeuralNetwork {
                 int[] forIds = getRandomPermutation(ids.length);
                 for (int l : forIds) {
                     //one iteration of SGD:
-                    Set<Integer> updatedWordsIds = new HashSet<Integer>(); //only used in L2R dot product
-                    updatedWordsIds.add(ids[l]);//only used in L2R dot product
                     Arrays.fill(temp, 0);
                     backprop(WP[pi], WV[ids[l]], 1, temp);
                     for (int i = 0; i < negSize; i++) {
-                        int randomWordId = Dataset.getRandomWordId();
-                        backprop(WP[pi], WV[randomWordId], 0, temp);
-                        updatedWordsIds.add(randomWordId);//only used in L2R dot product
+                        backprop(WP[pi], WV[Dataset.getRandomWordId()], 0, temp);
                     }
                     if (mode.equals("cosinesimilarity") || mode.equals("dotproduct")) {
                         for (int i = 0; i < n; i++) {
@@ -273,24 +269,6 @@ public class NeuralNetwork {
                     } else if (mode.equals("l2rdotproduct")) {
                         for (int i = 0; i < n; i++) {
                             WP[pi][i] += temp[i] - lr * 1.0d / WP.length * WP[pi][i];
-                        }
-                        for (int i = 0; i < WP.length; i++) {
-                            if (WP[i] != null) {
-                                if (i != pi) {
-                                    for (int j = 0; j < n; j++) {
-                                        WP[i][j] += -lr * 1.0d / WP.length * WP[i][j];
-                                    }
-                                }
-                            }
-                        }
-                        for (int i = 0; i < WV.length; i++) {
-                            if (WV[i] != null) {
-                                if (!updatedWordsIds.contains(i)) {
-                                    for (int j = 0; j < n; j++) {
-                                        WV[i][j] += -lr * 1.0d / WP.length * WV[i][j];
-                                    }
-                                }
-                            }
                         }
                     }
                 }
