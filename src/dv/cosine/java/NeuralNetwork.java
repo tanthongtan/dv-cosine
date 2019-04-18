@@ -29,7 +29,8 @@ public class NeuralNetwork {
     private static int a = 6; //only for cosine
     private static boolean lrAnnealing = false;
     private static final String mode = "cosinesimilarity"; //"cosinesimilarity" to use cosine similarity, "dotproduct" to use dot product, and "l2rdotproduct" to use L2 regularized dot product
-
+    private static double lambda = 0.01;
+    
     private static final int numThreads = 22;
     private static final boolean saveVecs = true;
 
@@ -268,7 +269,7 @@ public class NeuralNetwork {
                         }
                     } else if (mode.equals("l2rdotproduct")) {
                         for (int i = 0; i < n; i++) {
-                            WP[pi][i] += temp[i] - lr * 1.0d / WP.length * WP[pi][i];
+                            WP[pi][i] += temp[i] - lr * lambda * WP[pi][i];
                         }
                     }
                 }
@@ -307,7 +308,7 @@ public class NeuralNetwork {
                     if (mode.equals("dotproduct")) {
                         v[i] += -(y - t) * h[i] * lr;
                     } else if (mode.equals("l2rdotproduct")) {
-                        v[i] += -(y - t) * h[i] * lr - lr * 1.0d / WP.length * v[i];
+                        v[i] += -(y - t) * h[i] * lr - lr * lambda * v[i];
                     }
                 }
             }
