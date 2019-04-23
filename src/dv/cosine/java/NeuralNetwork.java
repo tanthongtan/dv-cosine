@@ -30,7 +30,7 @@ public class NeuralNetwork {
     private static boolean lrAnnealing = false;
     private static final String mode = "cosinesimilarity"; //"cosinesimilarity" to use cosine similarity, "dotproduct" to use dot product, and "l2rdotproduct" to use L2 regularized dot product
     private static double lambda = 0.01;
-    
+
     private static final int numThreads = 22;
     private static final boolean saveVecs = true;
 
@@ -41,6 +41,7 @@ public class NeuralNetwork {
     private static double[][] WP;
 
     private static Random random = new Random();
+    private static double originalLr; //only used in lrAnnealing == true
 
     public static void main(String[] args) {
         System.out.println("Reading Documents");
@@ -83,7 +84,7 @@ public class NeuralNetwork {
                             writeToFileForTuning(accuracy);
                             if (accuracy > bestAccuracy) {
                                 bestAccuracy = accuracy;
-                                bestParams = new String[]{gram + "", lr + "", negSize + "", iter + "", batchSize + "", n + "", a + "", lrAnnealing + "", mode};
+                                bestParams = new String[]{gram + "", originalLr + "", negSize + "", iter + "", batchSize + "", n + "", a + "", lrAnnealing + "", mode, lambda + ""};
                             }
                         }
                     }
@@ -95,10 +96,10 @@ public class NeuralNetwork {
 
     private static void writeToFileForTuning(double accuracy) {
         try {
-            FileWriter fw = new FileWriter("" + gram + lr + negSize + iter + batchSize + n + a + lrAnnealing + mode + ".txt");
+            FileWriter fw = new FileWriter("" + gram + originalLr + negSize + iter + batchSize + n + a + lrAnnealing + mode + lambda + ".txt");
 
             fw.write("gram = " + gram + "\n");
-            fw.write("lr = " + lr + "\n");
+            fw.write("lr = " + originalLr + "\n");
             fw.write("negSize = " + negSize + "\n");
             fw.write("iter = " + iter + "\n");
             fw.write("batchSize = " + batchSize + "\n");
@@ -106,6 +107,7 @@ public class NeuralNetwork {
             fw.write("a = " + a + "\n");
             fw.write("lrAnnealing = " + lrAnnealing + "\n");
             fw.write("mode = " + mode + "\n");
+            fw.write("lambda = " + lambda + "\n");
             fw.write("accuracy=" + accuracy + "\n");
 
             fw.close();
@@ -116,7 +118,7 @@ public class NeuralNetwork {
 
     private static void writeToFileForTuning(double accuracy, String[] bestParams) {
         try {
-            FileWriter fw = new FileWriter("" + bestParams[0] + bestParams[1] + bestParams[2] + bestParams[3] + bestParams[4] + bestParams[5] + bestParams[6] + bestParams[7] + bestParams[8] + "best.txt");
+            FileWriter fw = new FileWriter("" + bestParams[0] + bestParams[1] + bestParams[2] + bestParams[3] + bestParams[4] + bestParams[5] + bestParams[6] + bestParams[7] + bestParams[8] + bestParams[9] + "best.txt");
 
             fw.write("gram = " + bestParams[0] + "\n");
             fw.write("lr = " + bestParams[1] + "\n");
@@ -127,6 +129,7 @@ public class NeuralNetwork {
             fw.write("a = " + bestParams[6] + "\n");
             fw.write("lrAnnealing = " + bestParams[7] + "\n");
             fw.write("mode = " + bestParams[8] + "\n");
+            fw.write("lambda = " + bestParams[9] + "\n");
             fw.write("accuracy=" + accuracy + "\n");
 
             fw.write("best accuracy\n");
@@ -138,7 +141,8 @@ public class NeuralNetwork {
     }
 
     private static double learnEmbeddingsAndTest(List<Document> trainDocs, List<Document> testDocs, List<Document> allDocs, List<Document> docList) {
-        double accuracy = 0, originalLr = lr;
+        double accuracy = 0;
+        originalLr = lr;
         Dataset.initSum();
         System.out.println("Initializing network");
         initNet(allDocs);
