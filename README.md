@@ -2,7 +2,7 @@ Java code to train document embeddings using cosine similarity, simply run the p
 
 Run ensemble.py in order to test the combination of document embeddings with NB-weighted bag of ngrams.
 
-We highly encourage everyone to try and reproduce the experiments, and all thoughts and criticisms are greatly appreciated, thanks! :)
+All thoughts and criticisms are greatly appreciated, thanks! :)
 
 IMDB data:
 [unigrams](https://drive.google.com/file/d/1qxueBhd7WTBP58ZOdDL5K1DB0Sj2o5bZ/view?usp=sharing), [unigrams+bigrams](https://drive.google.com/file/d/1tou6u3-PHE-ZQAU43rhgmD_8BfJ0QLl1/view?usp=sharing), [unigrams+bigrams+trigrams](https://drive.google.com/file/d/1GDttGJrnZh370Y0KNMbAMfRNU50La07R/view?usp=sharing)
