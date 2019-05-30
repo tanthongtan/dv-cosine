@@ -67,7 +67,7 @@ public class NeuralNetwork {
             List<Document> devTrainDocs = trainDocs.subList(trainDocs.size() / 5, trainDocs.size());
             double bestAccuracy = 0;
             String[] bestParams = null;
-            int[] iters = {20, 40, 80, 120};
+            int[] iters = {10, 20, 40, 80, 120};
             double[] lrs = {0.25, 0.025, 0.0025, 0.001};
             int[] as = {4, 6, 8};
             boolean[] lrAnnealings = {true, false};
