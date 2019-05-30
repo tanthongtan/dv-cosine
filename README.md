@@ -1,6 +1,8 @@
 Code for the ACL-SRW 2019 paper: "Sentiment Classification using Document Embeddings trained with Cosine Similarity".
 
-Java code to train document embeddings using cosine similarity, simply run the project in order to do so. All hyperparameters that need adjusting are in the top of the file NeuralNetwork.java, default hyperparameters are the same as in the paper.
+This repository contains Java code to train document embeddings using cosine similarity, simply run the project in order to do so. All hyperparameters that need adjusting are in the top of the file NeuralNetwork.java, default hyperparameters are the same as in the paper.
+
+There are also options to train them using dot product and L2-regularized dot product.
 
 Run ensemble.py in order to test the combination of document embeddings with NB-weighted bag of ngrams.
 
