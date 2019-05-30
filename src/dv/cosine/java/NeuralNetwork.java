@@ -29,7 +29,7 @@ public class NeuralNetwork {
     private static int a = 6; //only for cosine
     private static boolean lrAnnealing = false;
     private static final String mode = "cosinesimilarity"; //"cosinesimilarity" to use cosine similarity, "dotproduct" to use dot product, and "l2rdotproduct" to use L2 regularized dot product
-    private static double lambda = 0.01;
+    private static double lambda = 0.01; //only for L2R dot product
 
     private static final int numThreads = 22;
     private static final boolean saveVecs = true;
