@@ -1,4 +1,4 @@
-Code for the ACL-SRW 2019 paper: "Sentiment Classification using Document Embeddings trained with Cosine Similarity".
+Code for the ACL-SRW 2019 paper: "[Sentiment Classification using Document Embeddings trained with Cosine Similarity](https://www.aclweb.org/anthology/P19-2057.pdf)".
 
 This repository contains Java code to train document embeddings using cosine similarity, simply run the project in order to do so. All hyperparameters that need adjusting are in the top of the file NeuralNetwork.java, default hyperparameters are the same as in the paper.
 
