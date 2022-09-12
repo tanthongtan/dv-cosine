@@ -1,4 +1,10 @@
-Code for the ACL-SRW 2019 paper: "Sentiment Classification using Document Embeddings trained with Cosine Similarity".
+#** Important **
+
+There is a bug in the implementation of the ensemble methods, causing the ensembles to have incorrectly high accuracies. Most notably, the previously reported accuracy of 97.42% for the DV-ngrams-cosine + NB-weighted BON ensemble is incorrect and when implemented correctly results in an accuracy of 93.68%. For now, please refer to https://github.com/bgzh/dv_cosine_revisited for a correct implementation of the ensembles. 
+
+In summary, the bug is caused by the incorrect concatenation of documents, so the non-ensemble methods are unaffected.  
+
+#Code for the ACL-SRW 2019 paper: "Sentiment Classification using Document Embeddings trained with Cosine Similarity".
 
 This repository contains Java code to train document embeddings using cosine similarity, simply run the project in order to do so. All hyperparameters that need adjusting are in the top of the file NeuralNetwork.java, default hyperparameters are the same as in the paper.
 
