@@ -4,7 +4,9 @@ There is a bug in the implementation of the ensemble methods, causing the ensemb
 
 In summary, the bug is caused by the incorrect concatenation of documents, so the non-ensemble methods are unaffected.  
 
-# Code for the ACL-SRW 2019 paper: "Sentiment Classification using Document Embeddings trained with Cosine Similarity".
+# Code for the ACL-SRW 2019 paper
+
+Code for the ACL-SRW 2019 paper: "Sentiment Classification using Document Embeddings trained with Cosine Similarity".
 
 This repository contains Java code to train document embeddings using cosine similarity, simply run the project in order to do so. All hyperparameters that need adjusting are in the top of the file NeuralNetwork.java, default hyperparameters are the same as in the paper.
 
